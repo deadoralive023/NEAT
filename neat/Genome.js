@@ -19,7 +19,11 @@ class Genome{
     }
 
     mutate(){
-
+        if(PROBS.MUTATE_CONNECTION > Math.random()) this.mutate_connection();
+        if(PROBS.MUTATE_NODE > Math.random()) this.mutate_node();
+        if(PROBS.MUTATE_WEIGHT_SHIFT > Math.random()) this.mutate_weight_sift();
+        if(PROBS.MUTATE_RANDOM_SHIFT > Math.random()) this.mutate_weight_random();
+        if(PROBS.MUTATE_TOGGLE_LINK > Math.random()) this.mutate_toggle_link();
     }
 
     mutate_connection(){
@@ -53,16 +57,30 @@ class Genome{
 
     }
 
-    mutate_random_weight(){
-        Genome.randomElement(his.connection_genes).weight = getRandomNumberFloat(2);
+    mutate_weight_random(){
+        Genome.randomElement(this.connection_genes).weight = getRandomNumberFloat(2) * STRENGTHS.WEIGHT_RANDOM;
     }
 
-    mutate_weighted_weight(){
-
+    mutate_weight_sift(){
+        Genome.randomElement(this.connection_genes).weight += getRandomNumberFloat(2) * STRENGTHS.WEIGHT_SHIFT;
     }
 
-    static crossover(genom1, genome2){
+    mutate_toggle_link(){
+        var connectionGene = Genome.randomElement(this.connection_genes);
+        connectionGene.expressed = !connectionGene.expressed;
+    }
 
+    static crossover(genome1, genome2){
+        Genome child = new Genome(Genome.population);
+        for (var [key, value] of Object.entries(genome1.node_genes))
+            child.add_node_gene(value);
+        for (var [key, value] of Object.entries(genome1.connection_genes)){
+            if(key in genome2.connection_genes)
+                child.add_connection_gene(Math.random() < 0.5 ? value : genome2.connection_genes[key]);
+            else
+                child.add_connection_gene(value);
+        }
+        return child;
     }
 
     add_node_gene(node_gene){
@@ -70,7 +88,7 @@ class Genome{
     }
 
     add_connection_gene(connection_gene){
-        this.connection_genes[connection_gene.innovation_no] = connection_gene;
+        this.connection_genes[connection_gene.innovation_no] = connection_gene.copy();
     }
 
     connection_genes_contains(node_from, node_to){
@@ -89,4 +107,12 @@ class Genome{
     static getRandomNumberFloat(range){
         return Math.random() < 0.5 ? Math.random() * -range : Math.random() * range;
     }
+
+    static obj_size(obj) {
+      var size = 0;
+      for (var key in obj)
+        if (obj.hasOwnProperty(key)) size++;
+      return size;
+    }
+
 }
