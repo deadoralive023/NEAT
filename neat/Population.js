@@ -16,17 +16,18 @@ class Population{
             this.genomes.push(new Genome(this));
     }
 
+
     get_connection_gene(node_from, node_to){
         for (var [key, value] of Object.entries(this.all_connections_genes))
             if(value.contains(node_from, node_to)) return value.copy();
-        var new_connection = new ConnectionGene(node_from.copy(), node_to.copy(), Genome.getRandomNumberFloat(1), true, this.all_connections_genes_size);
-        this.all_connections_genes[this.all_connections_genes_size++] = new_connection;
+        var new_connection = new ConnectionGene(node_from.copy(), node_to.copy(), Genome.getRandomNumberFloat(1), true, this.all_connections_genes_size++);
+        this.all_connections_genes[new_connection.innovation_no] = new_connection;
         return new_connection.copy();
     }
 
-    get_node_gene(type, id, position){
-        var new_node =  new NodeGene(type, id, position);
-        this.all_nodes_genes[this.all_nodes_genes_size] = new_node;
+    get_node_gene(type, position){
+        var new_node =  new NodeGene(type, this.all_nodes_genes_size++, position);
+        this.all_nodes_genes[new_node.id] = new_node;
         return new_node.copy();
     }
 }
