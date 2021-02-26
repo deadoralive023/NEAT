@@ -17,6 +17,12 @@ class Genome{
             var new_node = Genome.population.get_node_gene(NODE_TYPES.OUTPUT, i, {x:NODES_POSITIONS.OX * i, y:NODES_POSITIONS.OY});
             this.node_genes[new_node.id] = new_node
         }
+        for(var i = 0; i < Genome.population.no_input_nodes; i++){
+            for(var j = Genome.population.no_input_nodes; j < Genome.population.no_input_nodes + Genome.population.no_output_nodes + 1; j++){
+                var new_connection = Genome.population.get_connection_gene(Genome.population.all_nodes_genes[i], Genome.population.all_nodes_genes[j]);
+                this.connection_genes[new_connection.innovation_no] = new_connection;
+            }
+        }
     }
 
     mutate(){
@@ -44,7 +50,7 @@ class Genome{
     }
 
     mutate_node(){
-        if(this.connection_genes.length > 0){
+        if(Genome.obj_size(this.connection_genes) > 0){
             var connectionGene = Genome.randomElement(this.connection_genes)
             connectionGene.expressed = false;
             var mutated_node = Genome.population.get_node_gene(NODE_TYPES.HIDDEN, {x:NODES_POSITIONS.HX += 200, y:NODES_POSITIONS.HY});
@@ -60,19 +66,19 @@ class Genome{
     }
 
     mutate_weight_random(){
-        if(this.connection_genes.length > 0){
+        if(Genome.obj_size(this.connection_genes.length) > 0){
             Genome.randomElement(this.connection_genes).weight = getRandomNumberFloat(2) * STRENGTHS.WEIGHT_RANDOM;
         }
     }
 
     mutate_weight_shift(){
-        if(this.connection_genes.length > 0){
+        if(Genome.obj_size(this.connection_genes.length) > 0){
             Genome.randomElement(this.connection_genes).weight += getRandomNumberFloat(2) * STRENGTHS.WEIGHT_SHIFT;
         }
     }
 
     mutate_toggle_link(){
-        if(this.connection_genes.length > 0){
+        if(Genome.obj_size(this.connection_genes.length) > 0){
             var connectionGene = Genome.randomElement(this.connection_genes);
             connectionGene.expressed = !connectionGene.expressed;
         }
@@ -104,6 +110,11 @@ class Genome{
             if(value.contains(node_from, node_to)) return true;
         return false;
     }
+
+    max_innovation_no(){
+        return Math.max.apply(null,Object.keys(this.connection_genes));
+    }
+
     static randomElement(obj) {
         var keys = Object.keys(obj);
         return obj[keys[ keys.length * Math.random() << 0]];
@@ -123,8 +134,5 @@ class Genome{
       return size;
     }
 
-    max_innovation_no(){
-        return Math.max.apply(null,Object.keys(this.connection_genes));
-    }
 
 }

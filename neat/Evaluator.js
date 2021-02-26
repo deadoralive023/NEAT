@@ -1,4 +1,4 @@
-const DT = 5;
+const DT = 3;
 class Evaluator{
     constructor(population){
         this.population = population;
@@ -50,7 +50,6 @@ class Evaluator{
             var total_adjusted_value_population = this.adjusted_value_population();
             var total_adjusted_value_species =  this.adjusted_value_species();
         }
-        console.log(new_population_genomes.length);
         //breeding
         while(new_population_genomes.length < this.population.genomes.length){
             var genome1, genome2;
@@ -62,13 +61,12 @@ class Evaluator{
             else{
                 genome1 = this.get_random_genome();
                 genome2 = this.get_random_genome();
-                child = Genome.crossover(genome1, genome2);
             }
             var child = Genome.crossover(genome1, genome1);
             child.mutate();
             new_population_genomes.push(child);
         }
-        return new_population_genomes;
+        this.population.genomes = new_population_genomes;
     }
 
     evaluateFitness(genome){
@@ -77,27 +75,29 @@ class Evaluator{
 
     static distance(genome1, genome2, c1, c2, c3){
         var disjoint = 0, excess = 0, similar = 0, weight_diff = 0;
-        var index1 = 0, index2 = 0;
-        if(Math.max(genome1.max_innovation_no(), genome2.max_innovation_no())){
+        var genome1_max_inov = genome1.max_innovation_no();
+        var genome2_max_inov = genome2.max_innovation_no();
+        var genome1_connection_genes_size = Genome.obj_size(genome1.connection_genes);
+        var genome2_connection_genes_size = Genome.obj_size(genome2.connection_genes);
+        if(genome1_connection_genes_size < genome2_connection_genes_size){
             var temp_genome = genome1;
             genome1 = genome2;
             genome2 = temp_genome;
         }
-
         for (var [key, value] of Object.entries(genome1.connection_genes)){
-            if(key in genome2.connection_genes)
+            if(key in genome2.connection_genes){
+                similar++;
                 weight_diff += Math.abs(value.weight - genome2.connection_genes[key].weight);
-            else
+            }
+            else if(key < genome2_max_inov || (key > genome2_max_inov && genome1_max_inov > key))
                 disjoint++;
+            else
+                break;
         }
-
-        var genome1_size = Genome.obj_size(genome1.connection_genes);
-        var genome2_size = Genome.obj_size(genome2.connection_genes);
-        excess = genome1_size - disjoint - similar;
-        var N = Math.max(genome1_size, genome2_size);
+        excess = Math.abs(genome1_max_inov - genome2_max_inov);
+        var N = Math.max(genome1_connection_genes_size, genome2_connection_genes_size);
         if(N < 20) N = 1;
         var val = c1 * disjoint / N + c2 * excess / N + c3 * weight_diff;
-        debugger
         return val;
     }
 
