@@ -37,4 +37,5 @@ class Population{
         this.all_nodes_genes = [];
         this.all_nodes_genes_size = 0;
     }
+
 }

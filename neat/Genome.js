@@ -22,7 +22,7 @@ class Genome{
     mutate(){
         if(PROBS.MUTATE_CONNECTION > Math.random()) this.mutate_connection();
         if(PROBS.MUTATE_NODE > Math.random()) this.mutate_node();
-        if(PROBS.MUTATE_WEIGHT_SHIFT > Math.random()) this.mutate_weight_sift();
+        if(PROBS.MUTATE_WEIGHT_SHIFT > Math.random()) this.mutate_weight_shift();
         if(PROBS.MUTATE_RANDOM_SHIFT > Math.random()) this.mutate_weight_random();
         if(PROBS.MUTATE_TOGGLE_LINK > Math.random()) this.mutate_toggle_link();
     }
@@ -38,37 +38,44 @@ class Genome{
                     (node1.type == NODE_TYPES.OUTPUT && node2.type == NODE_TYPES.INPUT) )
                         isReversed = true;
                 var mutated_connection = Genome.population.get_connection_gene(isReversed?node2:node1, isReversed?node1:node2);
-                debugger
                 return this.connection_genes[mutated_connection.innovation_no] = mutated_connection;
             }
         }
     }
 
     mutate_node(){
-        var connectionGene = Genome.randomElement(this.connection_genes)
-        connectionGene.expressed = false;
-        var mutated_node = Genome.population.get_node_gene(NODE_TYPES.HIDDEN, {x:NODES_POSITIONS.HX += 200, y:NODES_POSITIONS.HY});
-        this.node_genes[mutated_node.id] = mutated_node;
-        var new_connection1 = Genome.population.get_connection_gene(connectionGene.node_from, mutated_node);
-        var new_connection2 = Genome.population.get_connection_gene(mutated_node, connectionGene.node_to);
-        new_connection1.weight = 1;
-        new_connection2.weight = connectionGene.weight;
-        this.connection_genes[new_connection1.innovation_no] = new_connection1;
-        this.connection_genes[new_connection2.innovation_no] = new_connection2;
+        if(this.connection_genes.length > 0){
+            var connectionGene = Genome.randomElement(this.connection_genes)
+            connectionGene.expressed = false;
+            var mutated_node = Genome.population.get_node_gene(NODE_TYPES.HIDDEN, {x:NODES_POSITIONS.HX += 200, y:NODES_POSITIONS.HY});
+            this.node_genes[mutated_node.id] = mutated_node;
+            var new_connection1 = Genome.population.get_connection_gene(connectionGene.node_from, mutated_node);
+            var new_connection2 = Genome.population.get_connection_gene(mutated_node, connectionGene.node_to);
+            new_connection1.weight = 1;
+            new_connection2.weight = connectionGene.weight;
+            this.connection_genes[new_connection1.innovation_no] = new_connection1;
+            this.connection_genes[new_connection2.innovation_no] = new_connection2;
+        }
 
     }
 
     mutate_weight_random(){
-        Genome.randomElement(this.connection_genes).weight = getRandomNumberFloat(2) * STRENGTHS.WEIGHT_RANDOM;
+        if(this.connection_genes.length > 0){
+            Genome.randomElement(this.connection_genes).weight = getRandomNumberFloat(2) * STRENGTHS.WEIGHT_RANDOM;
+        }
     }
 
-    mutate_weight_sift(){
-        Genome.randomElement(this.connection_genes).weight += getRandomNumberFloat(2) * STRENGTHS.WEIGHT_SHIFT;
+    mutate_weight_shift(){
+        if(this.connection_genes.length > 0){
+            Genome.randomElement(this.connection_genes).weight += getRandomNumberFloat(2) * STRENGTHS.WEIGHT_SHIFT;
+        }
     }
 
     mutate_toggle_link(){
-        var connectionGene = Genome.randomElement(this.connection_genes);
-        connectionGene.expressed = !connectionGene.expressed;
+        if(this.connection_genes.length > 0){
+            var connectionGene = Genome.randomElement(this.connection_genes);
+            connectionGene.expressed = !connectionGene.expressed;
+        }
     }
 
     static crossover(genome1, genome2){
@@ -114,6 +121,10 @@ class Genome{
       for (var key in obj)
         if (obj.hasOwnProperty(key)) size++;
       return size;
+    }
+
+    max_innovation_no(){
+        return Math.max.apply(null,Object.keys(this.connection_genes));
     }
 
 }

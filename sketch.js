@@ -3,7 +3,7 @@ var population;
 function setup() {
     var canvas = createCanvas(1500, 1000);
     canvas.parent("canvas-div");
-    var neat = new Neat(new Population(3, 1, 1));
+    var neat = new Neat(new Population(3, 1, 15));
     neat.evaluate();
     // population.genomes[0].add_node_gene(new NodeGene(NODE_TYPES.HIDDEN, 4, {x:300, y:400}));
     // population.genomes[0].add_connection_gene(new ConnectionGene(population.genomes[0].node_genes[0], population.genomes[0].node_genes[3], 1, true, 1));
