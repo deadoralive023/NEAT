@@ -5,7 +5,7 @@ class Population{
         this.population_size = population_size;
         this.all_connections_genes = {};
         this.all_connections_genes_size = 0;
-        this.all_nodes_genes = [];
+        this.all_nodes_genes = {};
         this.all_nodes_genes_size = 0;
         this.initialze();
     }
@@ -25,7 +25,8 @@ class Population{
         return new_connection.copy();
     }
 
-    get_node_gene(type, position){
+    get_node_gene(type, id, position){
+        if(id in this.all_nodes_genes) return this.all_nodes_genes[id];
         var new_node =  new NodeGene(type, this.all_nodes_genes_size++, position);
         this.all_nodes_genes[new_node.id] = new_node;
         return new_node.copy();

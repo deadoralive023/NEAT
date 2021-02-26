@@ -9,12 +9,12 @@ class Genome{
 
     initialze(){
         this.node_genes = {};
-        for(var i = 1; i < Genome.population.no_input_nodes + 1; i++){
-            var new_node = Genome.population.get_node_gene(NODE_TYPES.INPUT, {x:NODES_POSITIONS.IX * i, y:NODES_POSITIONS.IY})
+        for(var i = 0; i < Genome.population.no_input_nodes; i++){
+            var new_node = Genome.population.get_node_gene(NODE_TYPES.INPUT, i, {x:NODES_POSITIONS.IX * i, y:NODES_POSITIONS.IY})
             this.node_genes[new_node.id] = new_node;
         }
-        for(var i = 1; i < Genome.population.no_output_nodes + 1; i++){
-            var new_node = Genome.population.get_node_gene(NODE_TYPES.OUTPUT, {x:NODES_POSITIONS.OX * i, y:NODES_POSITIONS.OY});
+        for(var i = Genome.population.no_input_nodes; i < Genome.population.no_input_nodes + Genome.population.no_output_nodes + 1; i++){
+            var new_node = Genome.population.get_node_gene(NODE_TYPES.OUTPUT, i, {x:NODES_POSITIONS.OX * i, y:NODES_POSITIONS.OY});
             this.node_genes[new_node.id] = new_node
         }
     }

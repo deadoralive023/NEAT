@@ -1,21 +1,23 @@
 const DT = 5;
 class Evaluator{
     constructor(population){
-        this.generations = 0;
         this.population = population;
         this.species_list = [];
         this.mapped_species = {};
         this.fitness_genomes = [];
-        this.new_population_genomes = [];
 
     }
-    evaluate(){
-        if(this.generations != 0){
+    evaluate(generation){
+        this.species_list = [];
+        this.mapped_species = {};
+        this.fitness_genomes = [];
+        var new_population_genomes = [];
+        if(generation != 0){
             //Generate species on bases of distance function
             this.population.genomes.forEach((genome, i) => {
                 var found = false;
                 this.species_list.forEach((species, i) => {
-                     if(Evaluator.distance(species.comparator.genome, genome) < DT){
+                     if(Evaluator.distance(species.comparator.genome, genome, RATIOS.C1, RATIOS.C2, RATIOS.C3) < DT){
                          var fitness_genome = new FitnessGenome(genome);
                          species.add_fitness_genome(fitness_genome);
                          this.fitness_genomes.push(fitness_genome);
@@ -42,29 +44,31 @@ class Evaluator{
 
             //put best genomes from each species into next generation
             this.species_list.forEach((species, i) => {
-                 this.new_population_genomes.push(Evaluator.max_adjusted_fitness_genome(species));
+                 new_population_genomes.push(Evaluator.max_adjusted_fitness_genome(species));
             });
 
             var total_adjusted_value_population = this.adjusted_value_population();
             var total_adjusted_value_species =  this.adjusted_value_species();
         }
-
+        console.log(new_population_genomes.length);
         //breeding
-        debugger
-        while(this.new_population_genomes.length < this.population.genomes.length){
-            if(this.generations > 0){
-                var species = Evaluator.get_random_species_biased_adjusted_fitness(total_adjusted_value_population);
-                var fitness_genome1 = Evaluator.get_random_genome_biased_adjusted_fitness(species, total_adjusted_value_species[species]);
-                var fitness_genome2 = Evaluator.get_random_genome_biased_adjusted_fitness(species, total_adjusted_value_species[species]);
+        while(new_population_genomes.length < this.population.genomes.length){
+            var genome1, genome2;
+            if(generation > 0){
+                var species = Evaluator.get_random_species_biased_adjusted_fitness(this.species_list, total_adjusted_value_population);
+                genome1 = Evaluator.get_random_genome_biased_adjusted_fitness(species, total_adjusted_value_species[species]);
+                genome2 = Evaluator.get_random_genome_biased_adjusted_fitness(species, total_adjusted_value_species[species]);
             }
             else{
-                var genome1 = this.get_random_genome();
-                var genome2 = this.get_random_genome();
-                var child = Genome.crossover(genome1, genome2)
+                genome1 = this.get_random_genome();
+                genome2 = this.get_random_genome();
+                child = Genome.crossover(genome1, genome2);
             }
+            var child = Genome.crossover(genome1, genome1);
             child.mutate();
-            this.new_population_genomes.push(child);
+            new_population_genomes.push(child);
         }
+        return new_population_genomes;
     }
 
     evaluateFitness(genome){
@@ -74,8 +78,7 @@ class Evaluator{
     static distance(genome1, genome2, c1, c2, c3){
         var disjoint = 0, excess = 0, similar = 0, weight_diff = 0;
         var index1 = 0, index2 = 0;
-        debugger
-        if(Math.max.apply(genome1.max_innovation_no(), genome2.max_innovation_no())){
+        if(Math.max(genome1.max_innovation_no(), genome2.max_innovation_no())){
             var temp_genome = genome1;
             genome1 = genome2;
             genome2 = temp_genome;
@@ -88,21 +91,28 @@ class Evaluator{
                 disjoint++;
         }
 
-        var genome1_size = Genome.obj_size(genome1);
-        var genome2_size = Genome.obj_size(genome2);
-        excess = genome2_size - disjoint - similar;
-        var N = Math.max.apply(genome1_size, genome2_size);
+        var genome1_size = Genome.obj_size(genome1.connection_genes);
+        var genome2_size = Genome.obj_size(genome2.connection_genes);
+        excess = genome1_size - disjoint - similar;
+        var N = Math.max(genome1_size, genome2_size);
         if(N < 20) N = 1;
-        return c1 * disjoint / N + c2 * excess / N + c3 * weight_diff;
+        var val = c1 * disjoint / N + c2 * excess / N + c3 * weight_diff;
+        debugger
+        return val;
     }
 
-    static get_random_species_biased_adjusted_fitness(adjusted_value_population){
+    static get_random_species_biased_adjusted_fitness(species_list, adjusted_value_population){
         var r = Math.random() * adjusted_value_population;
         var weight = 0.0;
-        this.species_list.forEach((species, i) => {
+        var result;
+        species_list.forEach((species, i) => {
             weight += species.adjusted_value;
-            if(weight >= r) return species;
+            if(weight >= r){
+                result = species;
+                return;
+            }
         });
+        return result;
     }
 
     get_random_genome(){
@@ -112,10 +122,15 @@ class Evaluator{
     static get_random_genome_biased_adjusted_fitness(species, adjusted_value_speices){
         var r = Math.random() * adjusted_value_speices;
         var weight = 0.0;
+        var result;
         species.fitness_genomes.forEach((fitness_genome, i) => {
             weight += fitness_genome.adjusted_fitness_value;
-            if(weight >= r) return fitness_genome;
+            if(weight >= r){
+                result = fitness_genome.genome;
+                return;
+            }
         });
+        return result;
     }
 
 
@@ -133,7 +148,7 @@ class Evaluator{
         this.species_list.forEach((species, i) => {
             var total_adjusted_value = 0;
             species.fitness_genomes.forEach((fitness_genome, i) => {
-                total_adjusted_value += fitness_genome.adjusted_value;
+                total_adjusted_value += fitness_genome.adjusted_fitness_value;
             });
             genomes_adjusted_values[species] = total_adjusted_value;
         });
