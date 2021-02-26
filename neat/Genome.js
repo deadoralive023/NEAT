@@ -3,6 +3,7 @@ class Genome{
     constructor(population){
         Genome.population = population;
         this.connection_genes = {};
+        this.fitness = fitness;
         this.initialze();
     }
 
@@ -71,7 +72,7 @@ class Genome{
     }
 
     static crossover(genome1, genome2){
-        Genome child = new Genome(Genome.population);
+        var child = new Genome(Genome.population);
         for (var [key, value] of Object.entries(genome1.node_genes))
             child.add_node_gene(value);
         for (var [key, value] of Object.entries(genome1.connection_genes)){

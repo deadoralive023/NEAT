@@ -30,4 +30,11 @@ class Population{
         this.all_nodes_genes[new_node.id] = new_node;
         return new_node.copy();
     }
+
+    reset(){
+        this.all_connections_genes = {};
+        this.all_connections_genes_size = 0;
+        this.all_nodes_genes = [];
+        this.all_nodes_genes_size = 0;
+    }
 }
