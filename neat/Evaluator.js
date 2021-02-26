@@ -9,7 +9,6 @@ class Evaluator{
 
     }
     evaluate(){
-
         //Generate species on bases of distance function
         this.population.genomes.forEach((genome, i) => {
             var found = false;
@@ -20,7 +19,7 @@ class Evaluator{
                      fitness_genomes.push(fitness_genome);
                      this.mapped_species[fitness_genome] = species;
                      found = true;
-                     break;
+                     return;
                  }
             });
             if(!found){
@@ -74,7 +73,7 @@ class Evaluator{
 
         for (var [key, value] of Object.entries(genome1.connection_genes)){
             if(key in genome2.connection_genes)
-                weight_diff += Math.abs(value.weight - genome2.connection_genes[key].weight));
+                weight_diff += Math.abs(value.weight - genome2.connection_genes[key].weight);
             else
                 disjoint++;
         }

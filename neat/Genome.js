@@ -3,7 +3,7 @@ class Genome{
     constructor(population){
         Genome.population = population;
         this.connection_genes = {};
-        this.fitness = fitness;
+        this.fitness = 0;
         this.initialze();
     }
 
