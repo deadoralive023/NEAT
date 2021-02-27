@@ -30,7 +30,6 @@ class Genome{
         if(PROBS.MUTATE_NODE > Math.random()) this.mutate_node();
         if(PROBS.MUTATE_WEIGHT_SHIFT > Math.random()) this.mutate_weight_shift();
         if(PROBS.MUTATE_RANDOM_SHIFT > Math.random()) this.mutate_weight_random();
-        if(PROBS.MUTATE_TOGGLE_LINK > Math.random()) this.mutate_toggle_link();
     }
 
     mutate_connection(){
@@ -77,11 +76,11 @@ class Genome{
         }
     }
 
-    mutate_toggle_link(){
-        if(Genome.obj_size(this.connection_genes.length) > 0){
-            var connectionGene = Genome.randomElement(this.connection_genes);
-            connectionGene.expressed = !connectionGene.expressed;
+    static mutate_toggle_link(connectionGene){
+        if(!connectionGene.expressed && PROBS.MUTATE_TOGGLE_LINK > Math.random()){
+            connectionGene.expressed = true;
         }
+        return connectionGene;
     }
 
     static crossover(genome1, genome2){
@@ -89,10 +88,12 @@ class Genome{
         for (var [key, value] of Object.entries(genome1.node_genes))
             child.add_node_gene(value);
         for (var [key, value] of Object.entries(genome1.connection_genes)){
-            if(key in genome2.connection_genes)
-                child.add_connection_gene(Math.random() < 0.5 ? value : genome2.connection_genes[key]);
-            else
+            if(key in genome2.connection_genes){
+                child.add_connection_gene(Math.random() < 0.5 ? Genome.mutate_toggle_link(value) : Genome.mutate_toggle_link(genome2.connection_genes[key]));
+            }
+            else{
                 child.add_connection_gene(value);
+            }
         }
         return child;
     }

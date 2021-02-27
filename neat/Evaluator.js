@@ -62,7 +62,7 @@ class Evaluator{
                 genome1 = this.get_random_genome();
                 genome2 = this.get_random_genome();
             }
-            var child = Genome.crossover(genome1, genome1);
+            var child = (Math.random() * 100 > 25) ? Genome.crossover(genome1, genome1) : genome1;
             child.mutate();
             new_population_genomes.push(child);
         }
