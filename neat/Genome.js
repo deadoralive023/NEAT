@@ -34,7 +34,7 @@ class Genome{
         for(var i = 0; i < 50; i++){
             var node1 = NeuralNetwork.randomElement(this.node_genes);
             var node2 = NeuralNetwork.randomElement(this.node_genes);
-            if((node1.type != NODE_TYPES.HIDDEN && (node1.type - node2.type) != 0) && !(this.connection_genes_contains(node1, node2))){
+            if((node1.type - node2.type != 0) && !(this.connection_genes_contains(node1, node2))){
                 var isReversed = false;
                 if((node1.type == NODE_TYPES.HIDDEN && node2.type == NODE_TYPES.INPUT) ||
                     (node1.type == NODE_TYPES.OUTPUT && node2.type == NODE_TYPES.HIDDEN) ||

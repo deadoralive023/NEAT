@@ -24,6 +24,10 @@ class Pipe{
         return false;
     }
 
+    distance(bird){
+        return this.x - bird.x;
+    }
+
     show(){
         fill(255);
         if(this.highlight) fill(255, 0, 0);

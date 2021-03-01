@@ -4,7 +4,7 @@ var game;
 function setup() {
     var canvas = createCanvas(1500, 1000);
     canvas.parent("canvas-div");
-    game = new FlappyBird();
+    //game = new FlappyBird();
     var population = new Population(2, 1, 100);
     var neat = new Neat(population);
     for(var i = 0; i < 100; i++){
@@ -38,9 +38,9 @@ function setup() {
 }
 
 function draw() {
-    background(220);
+    background(0);
     //game.show();
-    //drawGenome(population.genomes[0]);
+    drawGenome(population.genomes[0]);
 }
 
 function keyPressed(){
