@@ -1,6 +1,6 @@
-class FitnessGenome{
-    constructor(genome){
-        this.genome = genome;
+class NeuralNetwork extends Genome{
+    constructor(population){
+        super(population);
         this.adjusted_fitness_value = 0;
     }
 

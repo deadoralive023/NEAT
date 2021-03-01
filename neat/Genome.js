@@ -10,19 +10,16 @@ class Genome{
     initialze(){
         this.node_genes = {};
         for(var i = 0; i < Genome.population.no_input_nodes; i++){
-            var new_node = Genome.population.get_node_gene(NODE_TYPES.INPUT, i, {x:NODES_POSITIONS.IX * i, y:NODES_POSITIONS.IY})
+            var new_node = Genome.population.get_node_gene(NODE_TYPES.INPUT, i)
             this.node_genes[new_node.id] = new_node;
         }
-        for(var i = Genome.population.no_input_nodes; i < Genome.population.no_input_nodes + Genome.population.no_output_nodes + 1; i++){
-            var new_node = Genome.population.get_node_gene(NODE_TYPES.OUTPUT, i, {x:NODES_POSITIONS.OX * i, y:NODES_POSITIONS.OY});
+        for(var i = Genome.population.no_input_nodes; i < Genome.population.no_input_nodes + Genome.population.no_output_nodes; i++){
+            var new_node = Genome.population.get_node_gene(NODE_TYPES.OUTPUT, i);
             this.node_genes[new_node.id] = new_node
         }
-        for(var i = 0; i < Genome.population.no_input_nodes; i++){
-            for(var j = Genome.population.no_input_nodes; j < Genome.population.no_input_nodes + Genome.population.no_output_nodes + 1; j++){
-                var new_connection = Genome.population.get_connection_gene(Genome.population.all_nodes_genes[i], Genome.population.all_nodes_genes[j]);
-                this.connection_genes[new_connection.innovation_no] = new_connection;
-            }
-        }
+        var new_connection = Genome.population.get_connection_gene(
+            this.node_genes[0], this.node_genes[Genome.population.no_input_nodes]);
+        this.connection_genes[new_connection.innovation_no] = new_connection;
     }
 
     mutate(){
@@ -30,32 +27,33 @@ class Genome{
         if(PROBS.MUTATE_NODE > Math.random()) this.mutate_node();
         if(PROBS.MUTATE_WEIGHT_SHIFT > Math.random()) this.mutate_weight_shift();
         if(PROBS.MUTATE_RANDOM_SHIFT > Math.random()) this.mutate_weight_random();
+        if(PROBS.MUTATE_TOGGLE_LINK > Math.random()) this.mutate_toggle_link();
     }
 
     mutate_connection(){
         for(var i = 0; i < 50; i++){
-            var node1 = Genome.randomElement(this.node_genes);
-            var node2 = Genome.randomElement(this.node_genes);
+            var node1 = NeuralNetwork.randomElement(this.node_genes);
+            var node2 = NeuralNetwork.randomElement(this.node_genes);
             if((node1.type != NODE_TYPES.HIDDEN && (node1.type - node2.type) != 0) && !(this.connection_genes_contains(node1, node2))){
                 var isReversed = false;
                 if((node1.type == NODE_TYPES.HIDDEN && node2.type == NODE_TYPES.INPUT) ||
                     (node1.type == NODE_TYPES.OUTPUT && node2.type == NODE_TYPES.HIDDEN) ||
                     (node1.type == NODE_TYPES.OUTPUT && node2.type == NODE_TYPES.INPUT) )
                         isReversed = true;
-                var mutated_connection = Genome.population.get_connection_gene(isReversed?node2:node1, isReversed?node1:node2);
+                var mutated_connection = NeuralNetwork.population.get_connection_gene(isReversed?node2:node1, isReversed?node1:node2);
                 return this.connection_genes[mutated_connection.innovation_no] = mutated_connection;
             }
         }
     }
 
     mutate_node(){
-        if(Genome.obj_size(this.connection_genes) > 0){
-            var connectionGene = Genome.randomElement(this.connection_genes)
+        if(NeuralNetwork.obj_size(this.connection_genes) > 0){
+            var connectionGene = NeuralNetwork.randomElement(this.connection_genes)
             connectionGene.expressed = false;
-            var mutated_node = Genome.population.get_node_gene(NODE_TYPES.HIDDEN, {x:NODES_POSITIONS.HX += 200, y:NODES_POSITIONS.HY});
+            var mutated_node = NeuralNetwork.population.get_node_gene(NODE_TYPES.HIDDEN);
             this.node_genes[mutated_node.id] = mutated_node;
-            var new_connection1 = Genome.population.get_connection_gene(connectionGene.node_from, mutated_node);
-            var new_connection2 = Genome.population.get_connection_gene(mutated_node, connectionGene.node_to);
+            var new_connection1 = NeuralNetwork.population.get_connection_gene(connectionGene.node_from, mutated_node);
+            var new_connection2 = NeuralNetwork.population.get_connection_gene(mutated_node, connectionGene.node_to);
             new_connection1.weight = 1;
             new_connection2.weight = connectionGene.weight;
             this.connection_genes[new_connection1.innovation_no] = new_connection1;
@@ -65,31 +63,36 @@ class Genome{
     }
 
     mutate_weight_random(){
-        if(Genome.obj_size(this.connection_genes.length) > 0){
-            Genome.randomElement(this.connection_genes).weight = getRandomNumberFloat(2) * STRENGTHS.WEIGHT_RANDOM;
+        if(NeuralNetwork.obj_size(this.connection_genes.length) > 0){
+            NeuralNetwork.randomElement(this.connection_genes).weight = getRandomNumberFloat(2) * STRENGTHS.WEIGHT_RANDOM;
         }
     }
 
     mutate_weight_shift(){
-        if(Genome.obj_size(this.connection_genes.length) > 0){
-            Genome.randomElement(this.connection_genes).weight += getRandomNumberFloat(2) * STRENGTHS.WEIGHT_SHIFT;
+        if(NeuralNetwork.obj_size(this.connection_genes.length) > 0){
+            NeuralNetwork.randomElement(this.connection_genes).weight += getRandomNumberFloat(2) * STRENGTHS.WEIGHT_SHIFT;
         }
     }
 
-    static mutate_toggle_link(connectionGene){
-        if(!connectionGene.expressed && PROBS.MUTATE_TOGGLE_LINK > Math.random()){
-            connectionGene.expressed = true;
+    mutate_toggle_link(){
+        if(NeuralNetwork.obj_size(this.connection_genes.length) > 0){
+            var network = NeuralNetwork.randomElement(this.connection_genes);
+            network.expressed = !network.expressed;
         }
-        return connectionGene;
     }
 
-    static crossover(genome1, genome2){
-        var child = new Genome(Genome.population);
-        for (var [key, value] of Object.entries(genome1.node_genes))
+    static crossover(network1, network2){
+        if(network1.adjusted_fitness_value < network2.adjusted_fitness_value){
+            var temp = network1;
+            network1 = network2;
+            network2 = network1;
+        }
+        var child = new NeuralNetwork(NeuralNetwork.population);
+        for (var [key, value] of Object.entries(network1.node_genes))
             child.add_node_gene(value);
-        for (var [key, value] of Object.entries(genome1.connection_genes)){
-            if(key in genome2.connection_genes){
-                child.add_connection_gene(Math.random() < 0.5 ? Genome.mutate_toggle_link(value) : Genome.mutate_toggle_link(genome2.connection_genes[key]));
+        for (var [key, value] of Object.entries(network1.connection_genes)){
+            if(key in network2.connection_genes){
+                child.add_connection_gene(Math.random() < 0.5 ? value : network2.connection_genes[key]);
             }
             else{
                 child.add_connection_gene(value);

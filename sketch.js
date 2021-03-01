@@ -5,11 +5,12 @@ function setup() {
     var canvas = createCanvas(1500, 1000);
     canvas.parent("canvas-div");
     game = new FlappyBird();
-    // var population = new Population(3, 1, 50);
-    // var neat = new Neat(population);
-    // for(var i = 0; i < 100; i++){
-    //     neat.generate_new_population();
-    // }
+    var population = new Population(2, 1, 100);
+    var neat = new Neat(population);
+    for(var i = 0; i < 100; i++){
+        neat.generate_new_population();
+        console.log("Generation: ", i, "    Highest fitness:", neat.highest_score, "     Amount of Species: ", neat.species_list.length);
+    }
 
     // population.genomes[0].add_node_gene(new NodeGene(NODE_TYPES.HIDDEN, 4, {x:300, y:400}));
     // population.genomes[0].add_connection_gene(new ConnectionGene(population.genomes[0].node_genes[0], population.genomes[0].node_genes[3], 1, true, 1));
@@ -38,7 +39,7 @@ function setup() {
 
 function draw() {
     background(220);
-    game.show();
+    //game.show();
     //drawGenome(population.genomes[0]);
 }
 

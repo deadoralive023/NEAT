@@ -11,9 +11,9 @@ class Population{
     }
 
     initialze(){
-        this.genomes = [];
+        this.networks = [];
         for(var i = 0; i < this.population_size; i++)
-            this.genomes.push(new Genome(this));
+            this.networks.push(new NeuralNetwork(this));
     }
 
 
@@ -25,9 +25,9 @@ class Population{
         return new_connection.copy();
     }
 
-    get_node_gene(type, id, position){
+    get_node_gene(type, id){
         if(id in this.all_nodes_genes) return this.all_nodes_genes[id];
-        var new_node =  new NodeGene(type, this.all_nodes_genes_size++, position);
+        var new_node =  new NodeGene(type, this.all_nodes_genes_size++);
         this.all_nodes_genes[new_node.id] = new_node;
         return new_node.copy();
     }

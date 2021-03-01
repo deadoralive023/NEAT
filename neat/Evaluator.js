@@ -4,108 +4,113 @@ class Evaluator{
         this.population = population;
         this.species_list = [];
         this.mapped_species = {};
-        this.fitness_genomes = [];
-
+        this.highest_score = 0;
+        this.fittest_netowrk = null;
     }
     evaluate(generation){
-        this.species_list = [];
+        this.species_list.forEach((species, i) => {
+            species.reset();
+        });
         this.mapped_species = {};
-        this.fitness_genomes = [];
-        var new_population_genomes = [];
-        if(generation != 0){
-            //Generate species on bases of distance function
-            this.population.genomes.forEach((genome, i) => {
-                var found = false;
-                this.species_list.forEach((species, i) => {
-                     if(Evaluator.distance(species.comparator.genome, genome, RATIOS.C1, RATIOS.C2, RATIOS.C3) < DT){
-                         var fitness_genome = new FitnessGenome(genome);
-                         species.add_fitness_genome(fitness_genome);
-                         this.fitness_genomes.push(fitness_genome);
-                         this.mapped_species[fitness_genome] = species;
-                         found = true;
-                         return;
-                     }
-                });
-                if(!found){
-                    var fitness_genome = new FitnessGenome(genome);
-                    var species = new Species(fitness_genome);
-                    this.species_list.push(species);
-                    this.fitness_genomes.push(fitness_genome);
-                    this.mapped_species[fitness_genome] = species;
-                }
-            });
-
-            //Calculate adjusted_fitness of genomes
-            this.fitness_genomes.forEach((fitness_genome, i) => {
-                 var adjusted_fitness = this.evaluateFitness(fitness_genome.genome) / this.mapped_species[fitness_genome.genome].fitness_genomes.length;
-                 fitness_genome.add_adjusted_fitness_value(adjusted_fitness);
-                 this.mapped_species[fitness_genome.genome].add_adjusted_value(adjusted_fitness);
-            });
-
-            //put best genomes from each species into next generation
+        var new_population_networks = [];
+        //Generate species on bases of distance function
+        this.population.networks.forEach((network, i) => {
+            var found = false;
             this.species_list.forEach((species, i) => {
-                 new_population_genomes.push(Evaluator.max_adjusted_fitness_genome(species));
+                 if(Evaluator.distance(network, species.comparator, RATIOS.C1, RATIOS.C2, RATIOS.C3) < DT){
+                     species.add_network(network);
+                     this.mapped_species[network] = species;
+                     found = true;
+                     return;
+                 }
             });
+            if(!found){
+                var species = new Species(network);
+                this.species_list.push(species);
+                this.mapped_species[network] = species;
+            }
+        });
 
-            var total_adjusted_value_population = this.adjusted_value_population();
-            var total_adjusted_value_species =  this.adjusted_value_species();
-        }
+        //Remove unused species
+        this.species_list.forEach((species, i) => {
+            if(species.networks.length ==  0) this.species_list.splice(i, 1);
+        });
+
+        //Calculate adjusted_fitness of networks
+        this.population.networks.forEach((network, i) => {
+            var score = this.evaluateFitness(network);
+            var adjusted_fitness = ( score / this.mapped_species[network].networks.length);
+            network.add_adjusted_fitness_value(adjusted_fitness);
+            this.mapped_species[network].add_adjusted_value(adjusted_fitness);
+            if(score > this.highest_score){
+                this.highest_score = score;
+                this.fittest_netowrk = network;
+            }
+        });
+
+        //put best networks from each species into next generation
+        this.species_list.forEach((species, i) => {
+             new_population_networks.push(Evaluator.max_adjusted_network(species));
+        });
+
+        var total_adjusted_value_population = this.adjusted_value_population();
+        var total_adjusted_value_species =  this.adjusted_value_species();
         //breeding
-        while(new_population_genomes.length < this.population.genomes.length){
-            var genome1, genome2;
-            if(generation > 0){
-                var species = Evaluator.get_random_species_biased_adjusted_fitness(this.species_list, total_adjusted_value_population);
-                genome1 = Evaluator.get_random_genome_biased_adjusted_fitness(species, total_adjusted_value_species[species]);
-                genome2 = Evaluator.get_random_genome_biased_adjusted_fitness(species, total_adjusted_value_species[species]);
-            }
-            else{
-                genome1 = this.get_random_genome();
-                genome2 = this.get_random_genome();
-            }
-            var child = (Math.random() * 100 > 25) ? Genome.crossover(genome1, genome1) : genome1;
+        while(new_population_networks.length < this.population.networks.length){
+            var species = this.get_random_species_biased_adjusted_fitness(total_adjusted_value_population);
+            var network1 = Evaluator.get_random_network_biased_adjusted_fitness(species, total_adjusted_value_species[species]);
+            var network2 = Evaluator.get_random_network_biased_adjusted_fitness(species, total_adjusted_value_species[species]);
+            var child = NeuralNetwork.crossover(network1, network2);
             child.mutate();
-            new_population_genomes.push(child);
+            new_population_networks.push(child);
         }
-        this.population.genomes = new_population_genomes;
+        this.population.networks = new_population_networks;
     }
 
-    evaluateFitness(genome){
+    evaluateFitness(network){
           throw new Error('You have to implement the method doSomething!');
     }
 
-    static distance(genome1, genome2, c1, c2, c3){
+    static distance(network1, network2, c1, c2, c3){
         var disjoint = 0, excess = 0, similar = 0, weight_diff = 0;
-        var genome1_max_inov = genome1.max_innovation_no();
-        var genome2_max_inov = genome2.max_innovation_no();
-        var genome1_connection_genes_size = Genome.obj_size(genome1.connection_genes);
-        var genome2_connection_genes_size = Genome.obj_size(genome2.connection_genes);
-        if(genome1_connection_genes_size < genome2_connection_genes_size){
-            var temp_genome = genome1;
-            genome1 = genome2;
-            genome2 = temp_genome;
+        var network1_max_inov = network1.max_innovation_no();
+        var network2_max_inov = network2.max_innovation_no();
+        var network1_connection_genes_size = NeuralNetwork.obj_size(network1.connection_genes);
+        var network2_connection_genes_size = NeuralNetwork.obj_size(network2.connection_genes);
+        if(network1_max_inov < network2_max_inov){
+            var temp_network = network1;
+            network1 = network2;
+            network2 = temp_network;
         }
-        for (var [key, value] of Object.entries(genome1.connection_genes)){
-            if(key in genome2.connection_genes){
+        var index1 = 0, index2 = 0;
+        while(index1 < network1_max_inov + 1){
+            if(index1 in network1.connection_genes && index2 in network2.connection_genes){
                 similar++;
-                weight_diff += Math.abs(value.weight - genome2.connection_genes[key].weight);
+                weight_diff += Math.abs(network1.connection_genes[index1].weight - network2.connection_genes[index2].weight);
             }
-            else if(key < genome2_max_inov || (key > genome2_max_inov && genome1_max_inov > key))
+            else if(index1 in network1.connection_genes && index2 < network2_max_inov){
                 disjoint++;
-            else
-                break;
+            }
+            else if(index1 in network1.connection_genes && index2 > network2_max_inov){
+                excess++;
+            }
+            else if(index2 in network2.connection_genes){
+                disjoint++;
+            }
+            index1++;
+            index2++;
         }
-        excess = Math.abs(genome1_max_inov - genome2_max_inov);
-        var N = Math.max(genome1_connection_genes_size, genome2_connection_genes_size);
+        var N = Math.max(network1_connection_genes_size, network2_connection_genes_size);
         if(N < 20) N = 1;
         var val = c1 * disjoint / N + c2 * excess / N + c3 * weight_diff;
         return val;
     }
 
-    static get_random_species_biased_adjusted_fitness(species_list, adjusted_value_population){
+    get_random_species_biased_adjusted_fitness(adjusted_value_population){
         var r = Math.random() * adjusted_value_population;
         var weight = 0.0;
         var result;
-        species_list.forEach((species, i) => {
+        this.species_list.forEach((species, i) => {
             weight += species.adjusted_value;
             if(weight >= r){
                 result = species;
@@ -115,18 +120,18 @@ class Evaluator{
         return result;
     }
 
-    get_random_genome(){
-        return this.population.genomes[Math.floor(Math.random() * this.population.genomes.length)];
+    get_random_network(){
+        return this.population.networks[Math.floor(Math.random() * this.population.networks.length)];
     }
 
-    static get_random_genome_biased_adjusted_fitness(species, adjusted_value_speices){
+    static get_random_network_biased_adjusted_fitness(species, adjusted_value_speices){
         var r = Math.random() * adjusted_value_speices;
         var weight = 0.0;
         var result;
-        species.fitness_genomes.forEach((fitness_genome, i) => {
-            weight += fitness_genome.adjusted_fitness_value;
+        species.networks.forEach((network, i) => {
+            weight += network.adjusted_fitness_value;
             if(weight >= r){
-                result = fitness_genome.genome;
+                result = network;
                 return;
             }
         });
@@ -144,26 +149,26 @@ class Evaluator{
     }
 
     adjusted_value_species(){
-        var genomes_adjusted_values = {};
+        var networks_adjusted_values = {};
         this.species_list.forEach((species, i) => {
             var total_adjusted_value = 0;
-            species.fitness_genomes.forEach((fitness_genome, i) => {
-                total_adjusted_value += fitness_genome.adjusted_fitness_value;
+            species.networks.forEach((network, i) => {
+                total_adjusted_value += network.adjusted_fitness_value;
             });
-            genomes_adjusted_values[species] = total_adjusted_value;
+            networks_adjusted_values[species] = total_adjusted_value;
         });
-        return genomes_adjusted_values;
+        return networks_adjusted_values;
     }
 
-    static max_adjusted_fitness_genome(species){
-        var max_adjusted_fitness_value = species.fitness_genomes[0].adjusted_fitness_value;
-        var genome = species.fitness_genomes[0].genome;
-        for(var i = 1; i < species.fitness_genomes.length; i++){
-            if(species.fitness_genomes[i].adjusted_fitness_value > max_adjusted_fitness_value){
-                max_adjusted_fitness_value = species.fitness_genomes[i].adjusted_fitness_value;
-                genome = species.fitness_genomes[i].genome;
+    static max_adjusted_network(species){
+        var max_adjusted_fitness_value = species.networks[0].adjusted_fitness_value;
+        var network = species.networks[0];
+        for(var i = 1; i < species.networks.length; i++){
+            if(species.networks[i].adjusted_fitness_value > max_adjusted_fitness_value){
+                max_adjusted_fitness_value = species.networks[i].adjusted_fitness_value;
+                network = species.networks[i];
             }
         }
-        return genome;
+        return network;
     }
 }
