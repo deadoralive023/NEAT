@@ -12,10 +12,10 @@ class NodeGene{
         return new NodeGene(this.type, this.id);
     }
 
-    avtivate(val){
+    activate(){
         switch (this.activation_function) {
             case AF.SIGMOID:
-                NodeGene.sigmoid(val);
+                this.output = NodeGene.sigmoid(this.output);
                 break;
             default:
                 break;

@@ -9,17 +9,31 @@ class NeuralNetwork extends Genome{
     }
 
     feed_forward(input){
-        if(input.length != NeuralNetwork.population.input_nodes) throw new Error('Size of input must be equal to the size of input nodes');
+        if(input.length != NeuralNetwork.population.no_input_nodes) throw new Error('Size of input must be equal to the size of input nodes');
 
-        for(var i = 0; i < NeuralNetwork.population.input_nodes; i++)
-            this.connection_genes[i].node_to.output =  input[i];
+        for(var i = 0; i < NeuralNetwork.population.no_input_nodes; i++)
+            this.node_genes[i].output =  input[i];
 
 
-        for(const [key, value] of Object.entries(this.connection_genes)){
-            if(value.node_from.type == NODE_TYPES.INPUT){
-                value.node_to.output += value.weight * node_from.output;
-            }
+        for(var i = 0; i < NeuralNetwork.population.no_output_nodes; i++){
+
         }
+
+
+        //
+        // var hidde_nodes =[];
+        // for(const [key, value] of Object.entries(this.connection_genes)){
+        //     if(value.node_from.type == NODE_TYPES.INPUT){
+        //         this.node_genes[value.node_to.id].output += value.weight * this.node_genes[value.node_from.id].output;
+        //         hidde_nodes.push(value.node_to.id);
+        //     }
+        // }
+        //
+        // hidde_nodes.forEach((node, i) => {
+        //     this.node_genes[node].activate();
+        // });
+
+
         //
         // for(const [key, value] of Object.entries(this.connection_genes)){
         //     if(hidde_nodes.contains(value.node_from)){
@@ -31,5 +45,18 @@ class NeuralNetwork extends Genome{
         //     this.connection_genes[hidde_nodes[i]].node_to.output +=  input[i] * this.connection_genes[i].weight;
         //     hidde_nodes.push(this.connection_genes[i].node_to);
         // }
+    }
+
+    cal_output(id){
+        var found = false;
+        for(const [key, value] of Object.entries(this.connection_genes)){
+            if(value.node_to.type == this.node_genes[id].type){
+                found = true;
+                this.node_genes[id] .output += cal_output(value.node_from.id) * value.weight;
+            }
+        }
+        if(!found){
+            return this.node_genes[id].output;
+        }
     }
 }

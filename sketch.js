@@ -12,6 +12,9 @@ function setup() {
         console.log("Generation: ", i, "    Highest fitness:", neat.highest_score, "     Amount of Species: ", neat.species_list.length);
     }
 
+    debugger
+    neat.fittest_netowrk.feed_forward([0.8, 0.2]);
+
     // population.genomes[0].add_node_gene(new NodeGene(NODE_TYPES.HIDDEN, 4, {x:300, y:400}));
     // population.genomes[0].add_connection_gene(new ConnectionGene(population.genomes[0].node_genes[0], population.genomes[0].node_genes[3], 1, true, 1));
     // population.genomes[0].add_connection_gene(new ConnectionGene(population.genomes[0].node_genes[1], population.genomes[0].node_genes[3], 1, true, 2));
