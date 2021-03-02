@@ -1,10 +1,12 @@
-class FlappyBird{
+class FlappyBird extends Neat{
     constructor(){
+        super(new Population(3, 1, 10));
         this.score = 0;
         this.pipes = [];
-        this.bird = new Bird();
+        this.birds = new Array(10).fill(new Bird(this.pipes));
         this.count = 0;
         this.is_game_over = false;
+        this.generate_new_population();
     }
 
     show(){
@@ -13,36 +15,24 @@ class FlappyBird{
             this.count = 0;
             if(this.pipes[0].off_screen()) this.pipes.shift();
         }
-        var found = false;
         this.pipes.forEach((pipe, i) => {
             pipe.show();
-            if(pipe.hits(this.bird)){
-                this.is_game_over = true;
-            }
-            if(pipe.has_scored(this.bird)) this.score++;
         });
-        this.bird.show();
-        stroke(255)
-        textSize(32);
-        text(this.score, 10, 30);
-        this.read_sensors();
+        // stroke(255)
+        // textSize(32);
+        // text(this.bird.score, 10, 30);
     }
 
-    read_sensors(){
-        var sensors = [];
-        for(var i = 0; i < this.pipes.length;  i++){
-            if(this.pipes[i].x - this.bird.x > 0){
-                stroke(5);
-                stroke(0,255,0);
-                //line(this.bird.x, this.bird.y, pipe.x + pipe.w, this.bird.y);
-                line(this.bird.x, this.bird.y,  this.pipes[i].x + (this.pipes[i].w/2), this.pipes[i].top);
-                line(this.bird.x, this.bird.y,  this.pipes[i].x + (this.pipes[i].w/2), windowHeight - this.pipes[i].bottom);
-                sensors[0] = this.pipes[i].x +  this.pipes.w - this.bird.x;
-                sensors[1] = this.pipes[i].top
-                sensors[2] = windowHeight - this.pipes[i].bottom;
-                break;
+    evaluatePopulationFitness(networks){
+        var scores = []
+        this.birds.forEach((bird, i) => {
+            bird.show();
+            bird.read_sensors();
+            networks[i].feed_forward(bird.read_sensors());
+            if(networks[i].node_genes[3].output > 0.5){
+                bird.up();
             }
-        }
-        return sensors;
+        });
+        return
     }
 }

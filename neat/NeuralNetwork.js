@@ -15,8 +15,9 @@ class NeuralNetwork extends Genome{
             this.node_genes[i].output =  input[i];
 
 
-        for(var i = 0; i < NeuralNetwork.population.no_output_nodes; i++){
-
+        debugger
+        for(var i = NeuralNetwork.population.no_input_nodes; i <NeuralNetwork.population.no_input_nodes + NeuralNetwork.population.no_output_nodes; i++){
+            var output = this.cal_output(i);
         }
 
 
@@ -49,14 +50,16 @@ class NeuralNetwork extends Genome{
 
     cal_output(id){
         var found = false;
-        for(const [key, value] of Object.entries(this.connection_genes)){
-            if(value.node_to.type == this.node_genes[id].type){
-                found = true;
-                this.node_genes[id] .output += cal_output(value.node_from.id) * value.weight;
-            }
-        }
-        if(!found){
+        if(this.node_genes[id].type == NODE_TYPES.INPUT){
             return this.node_genes[id].output;
         }
+        for(const [key, value] of Object.entries(this.connection_genes)){
+            if(value.node_from.type == this.node_genes[id].type){
+                found = true;
+                this.node_genes[id] .output += this.cal_output(value.node_from.id) * value.weight;
+            }
+        }
+        this.node_genes[id].activate();
+        return this.node_genes[id].output;
     }
 }

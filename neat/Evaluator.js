@@ -36,10 +36,11 @@ class Evaluator{
             if(species.networks.length ==  0) this.species_list.splice(i, 1);
         });
 
+        var scores = this.evaluatePopulationFitness(this.population.networks);
         //Calculate adjusted_fitness of networks
         this.population.networks.forEach((network, i) => {
-            var score = this.evaluateFitness(network);
-            var adjusted_fitness = ( score / this.mapped_species[network].networks.length);
+            //var score = this.evaluateFitness(network);
+            var adjusted_fitness = ( score[i] / this.mapped_species[network].networks.length);
             network.add_adjusted_fitness_value(adjusted_fitness);
             this.mapped_species[network].add_adjusted_value(adjusted_fitness);
             if(score > this.highest_score){
@@ -70,6 +71,11 @@ class Evaluator{
     evaluateFitness(network){
           throw new Error('You have to implement the method doSomething!');
     }
+
+    evaluatePopulationFitness(networks){
+          throw new Error('You have to implement the method doSomething!');
+    }
+
 
     static distance(network1, network2, c1, c2, c3){
         var disjoint = 0, excess = 0, similar = 0, weight_diff = 0;

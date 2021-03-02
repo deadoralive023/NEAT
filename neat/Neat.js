@@ -12,13 +12,4 @@ class Neat extends Evaluator {
         this.generation++;
     }
 
-    evaluateFitness(network){
-        var weightSum = 0.0;
-        for(const [key, value] of Object.entries(network.connection_genes)){
-            if(network.connection_genes[key].expressed){
-                weightSum += Math.abs(network.connection_genes[key].weight);
-            }
-        }
-        return (1000.0/(Math.abs(weightSum-100.0)));
-    }
 }
